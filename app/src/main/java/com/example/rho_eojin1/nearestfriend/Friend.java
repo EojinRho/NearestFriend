@@ -1,5 +1,6 @@
 package com.example.rho_eojin1.nearestfriend;
 
+import android.graphics.Bitmap;
 import android.location.Location;
 
 /**
@@ -8,29 +9,23 @@ import android.location.Location;
 public class Friend {
     private String name;
     private String id;
-    private int password;
-    private int profile;
+    private String profile;
     private Location location;
-    private String currStatus;
-    private String nextStatus;
+    private String status;
     private float distance;
 
-    public Friend(String name, String id, int password, int profile, Location location, String currStatus, String nextStatus){
+    public Friend(String name, String id, String profile, Location location, String status){
         this.name = name;
         this.id = id;
-        this.password = password;
         this.profile = profile;
         this.location = location;
-        this.currStatus = currStatus;
-        this.nextStatus = nextStatus;
+        this.status = status;
     }
     public String getName(){return name;}
     public String getId(){return id;}
-    public int getPassword(){return password;}
-    public int getProfile(){return profile;}
+    public String getProfile(){return profile;}
     public Location getLocation(){return location;}
-    public String getCurrStatus(){return currStatus;}
-    public String getNextStatus(){return nextStatus;}
+    public String getStatus(){return status;}
     public void updateDistance(Location myLocation){distance = myLocation.distanceTo(location);}
     public float getDistance(){return distance;}
 }
