@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
     EditText edittext;
     OkHttpClient client;
     Map<String, String> map;
+    Thread t;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,12 +131,12 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        Thread t = new Thread() {
+        t = new Thread() {
             @Override
             public void run() {
                 try {
                     while (!isInterrupted()) {
-                        Thread.sleep(6000);
+                        Thread.sleep(60000);
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -158,13 +159,13 @@ public class MainActivity extends AppCompatActivity {
 
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Friend selected = (Friend) parent.getAdapter().getItem(position);
+                /*Friend selected = (Friend) parent.getAdapter().getItem(position);
                 Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
                 intent.putExtra("MyName",myName);
                 intent.putExtra("FriendName",selected.getName());
+                startActivity(intent);*/
+                Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
                 startActivity(intent);
-                //Intent intent = new Intent(getApplicationContext(), MapActivity.class);
-                //startActivity(intent);
             }
         });
     }
