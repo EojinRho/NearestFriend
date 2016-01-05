@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
     EditText edittext;
     OkHttpClient client;
     Map<String, String> map;
+    Map<String, Integer> rangeMap;
     Thread t;
 
     @Override
@@ -70,6 +71,14 @@ public class MainActivity extends AppCompatActivity {
         map.put("3", "Sports");
         map.put("4", "Drinking");
 
+        //edit
+        rangeMap = new HashMap<String, Integer>();
+        rangeMap.put("1000m", 1000);
+        rangeMap.put("2000m", 2000);
+        rangeMap.put("3000m", 3000);
+        rangeMap.put("4000m", 4000);
+        rangeMap.put("5000m", 5000);
+
         client = new OkHttpClient();
 
         myName = "Rho";
@@ -84,17 +93,6 @@ public class MainActivity extends AppCompatActivity {
 
         friendlist = new ArrayList<Friend>();
 
-        edittext = (EditText) findViewById(R.id.editText1);
-        edittext.setImeOptions(EditorInfo.IME_ACTION_DONE);
-        edittext.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
-                if (i == EditorInfo.IME_ACTION_DONE) {
-                    myName = edittext.getText().toString();
-                }
-                return false;
-            }
-        });
-
         listview = (ListView)findViewById(R.id.listView);
 
         getFriendsTask task = new getFriendsTask();
@@ -102,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
         task.execute();
 
         spinnerlist = new ArrayList<String>();
+        spinnerlist.add("All");
         spinnerlist.add("Avaliable");
         spinnerlist.add("Game");
         spinnerlist.add("Shopping");
@@ -114,12 +113,46 @@ public class MainActivity extends AppCompatActivity {
         spinnerview.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (spinnerlist.get(position).equals("Avaliable")) {
+                //edit
+                if (spinnerlist.get(position).equals("All")) {
+                    m_adapter = new FriendAdapter(getApplicationContext(), R.layout.row, friendlist);
+                    listview.setAdapter(m_adapter);
+                } else if (spinnerlist.get(position).equals("Avaliable")) {
                     temp = exclude("Busy");
                     m_adapter = new FriendAdapter(getApplicationContext(), R.layout.row, temp);
                     listview.setAdapter(m_adapter);
                 } else {
                     temp = search(spinnerlist.get(position));
+                    m_adapter = new FriendAdapter(getApplicationContext(), R.layout.row, temp);
+                    listview.setAdapter(m_adapter);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+        spinnerlist = new ArrayList<String>();
+        spinnerlist.add("Infinite");
+        spinnerlist.add("1000m");
+        spinnerlist.add("2000m");
+        spinnerlist.add("3000m");
+        spinnerlist.add("4000m");
+        spinnerlist.add("5000m");
+        ArrayAdapter<String> adapter2 = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, spinnerlist);
+        Spinner spinnerview2 = (Spinner) findViewById(R.id.spinner2);
+        spinnerview2.setPrompt("Range");
+        spinnerview2.setAdapter(adapter2);
+        spinnerview2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                //edit
+                if (spinnerlist.get(position).equals("Infinite")) {
+                    m_adapter = new FriendAdapter(getApplicationContext(), R.layout.row, friendlist);
+                    listview.setAdapter(m_adapter);
+                } else {
+                    temp = rangedown(rangeMap.get(spinnerlist.get(position)));
                     m_adapter = new FriendAdapter(getApplicationContext(), R.layout.row, temp);
                     listview.setAdapter(m_adapter);
                 }
@@ -164,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("MyName",myName);
                 intent.putExtra("FriendName",selected.getName());
                 startActivity(intent);*/
-                Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
+                Intent intent = new Intent(getApplicationContext(), InviteActivity.class);
                 startActivity(intent);
             }
         });
@@ -251,6 +284,16 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<Friend> new_list = new ArrayList<Friend>();
         for(int i=0; i<friendlist.size();++i){
             if(friendlist.get(i).getStatus().equals(status)){
+                new_list.add(friendlist.get(i));
+            }
+        }
+        return new_list;
+    }
+
+    public ArrayList<Friend> rangedown(int range){
+        ArrayList<Friend> new_list = new ArrayList<Friend>();
+        for(int i=0; i<friendlist.size();++i){
+            if(friendlist.get(i).getDistance() < range){
                 new_list.add(friendlist.get(i));
             }
         }
@@ -344,8 +387,9 @@ public class MainActivity extends AppCompatActivity {
 
             sort();
             UserInfo.setFriendlist(friendlist);
-            ArrayList<Friend> temp = exclude("Busy");
-            m_adapter = new FriendAdapter(getApplicationContext(), R.layout.row, temp);
+            //edit
+            //ArrayList<Friend> temp = exclude("Busy");
+            m_adapter = new FriendAdapter(getApplicationContext(), R.layout.row, friendlist);
             listview.setAdapter(m_adapter);
             super.onPostExecute(result);
         }
