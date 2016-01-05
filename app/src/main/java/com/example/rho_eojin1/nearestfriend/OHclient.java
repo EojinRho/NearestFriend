@@ -11,10 +11,10 @@ public class OHclient {
 
     private static OkHttpClient client;
 
-    public static OkHttpClient getClient() throws IOException{
-        if(client == null){
-            client = new OkHttpClient();
-        }
-        return client;
+        public static OkHttpClient getClient() throws IOException{
+            if(client == null){
+                client = new OkHttpClient();
+            }
+            return client;
     }
 }

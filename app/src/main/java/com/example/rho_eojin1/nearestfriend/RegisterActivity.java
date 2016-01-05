@@ -25,6 +25,8 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
+import net.ser1.stomp.Client;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
@@ -35,7 +37,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     private static final String TAG = "RegisterActivity";
     OkHttpClient client;
-
+    Client stomp;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,7 +73,7 @@ public class RegisterActivity extends AppCompatActivity {
                     usernameWrapper.setErrorEnabled(false);
                     passwordWrapper.setErrorEnabled(false);
                     registerAsyncTask RAT = new registerAsyncTask();
-                    RAT.execute(username, password, name);
+                    RAT.execute(username, password, name, "http://connect.networktables.com/resources/userfiles/nopicture.jpg");
                 }
             }
         });
@@ -93,11 +95,12 @@ public class RegisterActivity extends AppCompatActivity {
         }
     }
 
-    private JSONObject ifRegisterValidated(String name, String username, String password){
+    private JSONObject ifRegisterValidated(String name, String username, String password, String pictureurl){
         RequestBody formBody = new FormEncodingBuilder()
                 .add("username", username)
                 .add("password", password)
                 .add("realname", name)
+                .add("picture", pictureurl)
                 .build();
         Request request = new Request.Builder()
                 .url("http://143.248.139.70:8000/signup")
@@ -132,7 +135,7 @@ public class RegisterActivity extends AppCompatActivity {
         @Override
         protected JSONObject doInBackground(String... params) {
             try{
-                res = ifRegisterValidated(params[2],params[0],params[1]);
+                res = ifRegisterValidated(params[2],params[0],params[1], params[3]);
                 username = params[0];
             }catch(Exception e){
                 e.printStackTrace();
@@ -145,15 +148,15 @@ public class RegisterActivity extends AppCompatActivity {
             super.onPostExecute(result);
             JSONObject jsonobject = result;
             try{
-                if(jsonobject.get("status").equals("200")){
+                if(jsonobject.optString("status").equals("200")){
                     Context context = getApplicationContext();
                     CharSequence text = "Signup Success!";
                     int duration = Toast.LENGTH_SHORT;
                     Toast toast = Toast.makeText(context,text,duration);
                     toast.show();
-                    UserInformation.setusername(username);
-                    UserInformation.setrealname("Jaemin Shin");
-                    setResult(RESULT_OK,null);
+                    UserInformation.setusername(jsonobject.optString("username").toString());
+                    UserInformation.setrealname(jsonobject.optString("realname").toString());
+                    UserInformation.setpictureurl("http://connect.networktables.com/resources/userfiles/nopicture.jpg");
                     finish();
                 }
                 else if(jsonobject.get("status").equals("404")){

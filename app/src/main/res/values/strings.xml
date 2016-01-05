@@ -1,4 +1,22 @@
 <resources>
     <string name="app_name">NearestFriend</string>
     <string name="action_settings">Settings</string>
+    <string name="action_search">Search</string>
+    <string name="drawer_open">Open</string>
+    <string name="drawer_close">Close</string>
+
+    <string name="nav_item_home">Status</string>
+    <string name="nav_item_friends">Add Friend</string>
+
+    <!-- navigation drawer item labels  -->
+    <string-array name="nav_drawer_labels">
+        <item>@string/nav_item_home</item>
+        <item>@string/nav_item_friends</item>
+    </string-array>
+
+    <string name="title_friends">Add Friend</string>
+    <string name="title_home">Status</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_status">StatusActivity</string>
+    <string name="title_activity_invite">InviteActivity</string>
 </resources>

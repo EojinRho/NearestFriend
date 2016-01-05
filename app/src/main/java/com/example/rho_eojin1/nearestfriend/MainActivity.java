@@ -2,6 +2,7 @@ package com.example.rho_eojin1.nearestfriend;
 
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -9,6 +10,7 @@ import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,15 +25,22 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
+import net.ser1.stomp.*;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
     OkHttpClient client;
+    StompClient stompClient;
     private final int REQUEST_REGISTER = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,7 +56,17 @@ public class MainActivity extends AppCompatActivity {
         }catch(IOException e){
             e.printStackTrace();
         }
-        btn.setOnClickListener(new View.OnClickListener() {
+        try{
+            this.stompClient = StompClient.getClient(getApplicationContext(), this);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        class CustomOnClickListener implements View.OnClickListener {
+            StompClient mClient;
+            public CustomOnClickListener(StompClient client) {
+                this.mClient = client;
+            }
             public void onClick(View v) {
                 hideKeyboard();
                 String username = usernameWrapper.getEditText().getText().toString();
@@ -59,15 +78,19 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     usernameWrapper.setErrorEnabled(false);
                     passwordWrapper.setErrorEnabled(false);
-                    loginAsyncTask LAT = new loginAsyncTask();
+                    loginAsyncTask LAT = new loginAsyncTask(this.mClient);
                     LAT.execute(username, password);
                 }
             }
-        });
+        }
+
+        CustomOnClickListener customOnClickListener = new CustomOnClickListener(this.stompClient);
+
+        btn.setOnClickListener(customOnClickListener);
         registerLink.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), RegisterActivity.class);
-                startActivityForResult(intent, REQUEST_REGISTER);
+                startActivity(intent);
             }
         });
     }
@@ -96,28 +119,16 @@ public class MainActivity extends AppCompatActivity {
             Response response = client.newCall(request).execute();
             if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
             jsonData = response.body().string();
-            System.out.println(jsonData);
         } catch (IOException e) {
             e.printStackTrace();
         }
         try {
             jsonObject = new JSONObject(jsonData);
+            Log.e("Login", jsonObject.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
         return jsonObject;
-    }
-
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_REGISTER) {
-            if (resultCode == RESULT_OK) {
-                Intent logedin_intent = new Intent(getApplicationContext(), LogedInActivity.class);
-                startActivity(logedin_intent);
-                // TODO: Implement successful signup logic here
-                // By default we just finish the Activity and log them in automatically
-                this.finish();
-            }
-        }
     }
 
     @Override
@@ -145,6 +156,10 @@ public class MainActivity extends AppCompatActivity {
     private class loginAsyncTask extends AsyncTask<String, Void, JSONObject> {
         JSONObject res = null;
         String username = null;
+        StompClient mClient;
+        public loginAsyncTask(StompClient client) {
+            this.mClient = client;
+        }
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -165,29 +180,29 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(JSONObject result) {
             super.onPostExecute(result);
             JSONObject jsonobject = result;
-            try{
-                if(jsonobject.get("status").equals("200")){
+            String destination = "/queue/" + result.optString("username");
+            mClient.addQueue(destination);
+                if(jsonobject.optString("status").equals("200")){
                     Context context = getApplicationContext();
                     CharSequence text = "Login Success!";
                     int duration = Toast.LENGTH_SHORT;
                     Toast toast = Toast.makeText(context,text,duration);
                     toast.show();
-                    UserInformation.setusername(username);
-                    UserInformation.setrealname("Jaemin Shin"); // TODO:Should be changed to jsonobject.get("realname")
+                    UserInformation.setusername(jsonobject.optString("username").toString());
+                    UserInformation.setrealname(jsonobject.optString("realname").toString());
+                    UserInformation.setpictureurl(jsonobject.optString("picture").toString());
                     Intent logedin_intent = new Intent(getApplicationContext(), LogedInActivity.class);
                     startActivity(logedin_intent);
                     finish();
                 }
-                else if(jsonobject.get("status").equals("404")){
+                else if(jsonobject.optString("status").equals("404")){
                     Context context = getApplicationContext();
                     CharSequence text = "Login Failed! Check your username and password.";
                     int duration = Toast.LENGTH_SHORT;
                     Toast toast = Toast.makeText(context,text,duration);
                     toast.show();
                 }
-            }catch(JSONException e){
-                e.printStackTrace();
-            }
+
         }
 
         protected JSONObject getres(){
